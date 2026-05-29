@@ -1,0 +1,130 @@
+{
+  "version": "1.0",
+  "description": "Coordinate mapping for Quran Mushaf pages - defines highlight positions for each verse",
+  "pages": {
+    "1": {
+      "pageNumber": 1,
+      "surahNumber": 1,
+      "verses": {
+        "1": {
+          "verseNumber": 1,
+          "x": 0.25,
+          "y": 0.05,
+          "width": 0.50,
+          "height": 0.04
+        },
+        "2": {
+          "verseNumber": 2,
+          "x": 0.06,
+          "y": 0.12,
+          "width": 0.42,
+          "height": 0.045
+        },
+        "3": {
+          "verseNumber": 3,
+          "x": 0.52,
+          "y": 0.12,
+          "width": 0.42,
+          "height": 0.045
+        },
+        "4": {
+          "verseNumber": 4,
+          "x": 0.06,
+          "y": 0.18,
+          "width": 0.42,
+          "height": 0.045
+        },
+        "5": {
+          "verseNumber": 5,
+          "x": 0.52,
+          "y": 0.18,
+          "width": 0.42,
+          "height": 0.045
+        },
+        "6": {
+          "verseNumber": 6,
+          "x": 0.06,
+          "y": 0.24,
+          "width": 0.42,
+          "height": 0.045
+        },
+        "7": {
+          "verseNumber": 7,
+          "x": 0.52,
+          "y": 0.24,
+          "width": 0.42,
+          "height": 0.045
+        }
+      }
+    },
+    "2": {
+      "pageNumber": 2,
+      "surahNumber": 2,
+      "verses": {
+        "1": {
+          "verseNumber": 1,
+          "x": 0.25,
+          "y": 0.05,
+          "width": 0.50,
+          "height": 0.04
+        },
+        "2": {
+          "verseNumber": 2,
+          "x": 0.06,
+          "y": 0.12,
+          "width": 0.42,
+          "height": 0.045
+        },
+        "3": {
+          "verseNumber": 3,
+          "x": 0.52,
+          "y": 0.12,
+          "width": 0.42,
+          "height": 0.045
+        }
+      }
+    }
+  },
+  "wordLevelMapping": {
+    "1_1": {
+      "pageNumber": 1,
+      "verseNumber": 1,
+      "words": [
+        {
+          "wordIndex": 0,
+          "text": "بِسْمِ",
+          "x": 0.35,
+          "y": 0.05,
+          "width": 0.10,
+          "height": 0.04
+        },
+        {
+          "wordIndex": 1,
+          "text": "ٱللَّهِ",
+          "x": 0.45,
+          "y": 0.05,
+          "width": 0.10,
+          "height": 0.04
+        },
+        {
+          "wordIndex": 2,
+          "text": "ٱلرَّحْمَـٰنِ",
+          "x": 0.55,
+          "y": 0.05,
+          "width": 0.12,
+          "height": 0.04
+        },
+        {
+          "wordIndex": 3,
+          "text": "ٱلرَّحِيمِ",
+          "x": 0.67,
+          "y": 0.05,
+          "width": 0.12,
+          "height": 0.04
+        }
+      ]
+    }
+  },
+  "note": "All coordinates are relative (0.0 to 1.0). x,y = top-left corner, width/height = box size. This is a template - add all 604 pages with accurate coordinates.",
+  "wordLevelNote": "Format: 'pageNumber_verseNumber' -> array of words with individual coordinates. Requires word-level timestamp data in LRC file."
+}

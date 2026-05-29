@@ -1,0 +1,58 @@
+name: medbouh_quran
+description: A premium Quran recitation app for Hamza Medbouh.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  just_audio: ^0.9.36
+  audio_service: ^0.18.12
+  path_provider: ^2.1.2
+  dio: ^5.4.0
+  shared_preferences: ^2.2.2
+  google_fonts: ^6.1.0
+  flutter_riverpod: ^2.4.9
+  audio_video_progress_bar: ^2.0.1
+  cached_network_image: ^3.3.0
+  intl: ^0.19.0
+  font_awesome_flutter: ^10.6.0
+  permission_handler: ^12.0.1
+  youtube_explode_dart: ^3.1.0
+  flutter_native_splash: ^2.4.7
+  flutter_local_notifications: ^17.1.2
+  wakelock_plus: ^1.6.1
+  sqflite: ^2.4.2+1
+  path: ^1.9.1
+  flutter_foreground_task: ^9.2.2
+  fl_chart: ^1.2.0
+  open_filex: ^4.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/lyrics/
+    - assets/json/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/reader.jpg"
+
+flutter_native_splash:
+  color: "#1A1A1A"
+  image: "assets/images/reader.jpg"
+  android: true
+  android_12:
+    image: "assets/images/reader.jpg"
+    color: "#1A1A1A"

@@ -1,0 +1,27 @@
+# Task Management
+
+- [x] Restore and Enhance Premium Features
+	- [x] Research and Planning
+		- [x] Analyze codebase for missing/disabled features
+		- [x] Plan dynamic theme implementation
+		- [x] Plan multi-source data integration
+	- [x] Implementation - Assets & Environment
+		- [x] Move JSON files to `assets/json/`
+		- [x] Update `pubspec.yaml`
+	- [x] Implementation - Theme & Colors
+		- [x] Update `AppColors` in `colors.dart`
+		- [x] Create `theme_provider.dart`
+		- [x] Integrate theme in `main.dart`
+	- [x] Implementation - Data Providers
+		- [x] Create `content_provider.dart`
+		- [x] Implement GitHub JSON fetching
+		- [x] Implement local JSON loading
+	- [x] Implementation - UI Updates
+		- [x] Update `QuranPage` categories and grid
+		- [x] Add "Suggestion of the Day" logic
+		- [x] Update `PlaylistsPage` with remote sources
+		- [x] Apply Glassmorphism to UI components
+	- [x] Verification
+		- [x] Verify dynamic theme switching
+		- [x] Verify JSON data loading
+		- [x] Verify audio player features
