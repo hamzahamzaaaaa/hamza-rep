@@ -757,7 +757,7 @@ class MushafSettingsPanel extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final fonts = ['Amiri', 'Cairo', 'Noto Naskh Arabic', 'Scheherazade New'];
+    final fonts = ['Amiri', 'UthmanTaha', 'Cairo', 'Noto Naskh Arabic', 'Scheherazade New'];
 
     return GlassCard(
       child: Column(

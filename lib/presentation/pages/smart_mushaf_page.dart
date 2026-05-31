@@ -614,10 +614,12 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
             ),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               RichText(
-                textAlign: TextAlign.right,
+                textAlign: lrcLines[i].verseText.split(' ').length > 4 
+                    ? TextAlign.justify 
+                    : TextAlign.center,
                 textDirection: TextDirection.rtl,
                 text: TextSpan(
                   children: [
@@ -627,6 +629,8 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
                         color: isActive 
                             ? (highlightColor.computeLuminance() > 0.5 ? Colors.black : Colors.white)
                             : textColor.withOpacity(0.9),
+                        wordSpacing: 0,
+                        letterSpacing: 0,
                       ),
                     ),
                     
@@ -656,37 +660,39 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   TextStyle _getFontStyle(bool isActive) {
     TextStyle style;
     
+    // Default base style with no spacing to force Kashida usage by the font engine
+    final baseStyle = TextStyle(
+      height: 1.8,
+      wordSpacing: 0,
+      letterSpacing: 0,
+      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+    );
+
     switch (_fontName) {
       case 'Cairo':
         style = GoogleFonts.cairo(
-          fontSize: _fontSize,
-          height: 1.8,
-          color: isActive ? Colors.black : Colors.black87,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          textStyle: baseStyle.copyWith(fontSize: _fontSize),
         );
         break;
       case 'Noto Naskh Arabic':
         style = GoogleFonts.notoNaskhArabic(
-          fontSize: _fontSize,
-          height: 1.8,
-          color: isActive ? Colors.black : Colors.black87,
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+          textStyle: baseStyle.copyWith(fontSize: _fontSize, fontWeight: isActive ? FontWeight.w600 : FontWeight.normal),
         );
         break;
       case 'Scheherazade New':
         style = GoogleFonts.scheherazadeNew(
+          textStyle: baseStyle.copyWith(fontSize: _fontSize, fontWeight: isActive ? FontWeight.w700 : FontWeight.normal),
+        );
+        break;
+      case 'UthmanTaha':
+        style = baseStyle.copyWith(
+          fontFamily: 'UthmanTaha',
           fontSize: _fontSize,
-          height: 1.8,
-          color: isActive ? Colors.black : Colors.black87,
-          fontWeight: isActive ? FontWeight.w700 : FontWeight.normal,
         );
         break;
       default: // Amiri
         style = GoogleFonts.amiri(
-          fontSize: _fontSize,
-          height: 1.8,
-          color: isActive ? Colors.black : Colors.black87,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          textStyle: baseStyle.copyWith(fontSize: _fontSize),
         );
     }
 

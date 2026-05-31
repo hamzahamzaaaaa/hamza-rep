@@ -43,6 +43,15 @@ flutter:
     - assets/images/
     - assets/lyrics/
     - assets/json/
+    - assets/fonts/
+
+  fonts:
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf
+    - family: UthmanTaha
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf # Fallback for now, user to provide real UT if needed
 
 flutter_launcher_icons:
   android: true
