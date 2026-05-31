@@ -47,12 +47,14 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/reader.jpg"
+  image_path: "assets/images/reciter.png"
+  adaptive_icon_background: "#1A1A1A"
+  adaptive_icon_foreground: "assets/images/reciter.png"
 
 flutter_native_splash:
   color: "#1A1A1A"
-  image: "assets/images/reader.jpg"
+  image: "assets/images/reciter.png"
   android: true
   android_12:
-    image: "assets/images/reader.jpg"
+    image: "assets/images/reciter.png"
     color: "#1A1A1A"

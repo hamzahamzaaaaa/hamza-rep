@@ -8,7 +8,9 @@ import 'package:http/http.dart' as http;
 import '../../core/models/surah.dart';
 import '../../core/constants/colors.dart';
 import '../../core/providers/player_provider.dart';
+import '../../core/providers/advanced_settings_provider.dart';
 import '../widgets/mushaf_settings_panel.dart';
+import '../widgets/quick_index_overlay.dart';
 
 /// ============================================================================
 /// SMART MUSHAF PAGE - تجربة المصحف الورقي الكاملة
@@ -58,6 +60,8 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   double _fontSize = 32.0;
   String _fontName = 'Amiri';
   double _opacity = 1.0;
+
+  bool _showQuickIndex = false;
   
   // Offset correction for sync (in milliseconds)
   int syncOffsetMs = -500; // Subtracts 500ms from current time to prevent early jumping
@@ -258,7 +262,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
 
   void _startAutoHideTimer() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 5), () {
+    _hideTimer = Timer(const Duration(seconds: 4), () {
       if (mounted) {
         setState(() => _showControls = false);
       }
@@ -377,6 +381,16 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
                 right: 0,
                 child: _buildBottomControls(playerState),
               ),
+
+            if (_showQuickIndex)
+              QuickIndexOverlay(
+                surahs: widget.playlist,
+                onSurahSelected: (surah) {
+                  ref.read(playerProvider.notifier).playSurah(surah, widget.playlist);
+                  setState(() => _showQuickIndex = false);
+                },
+                onClose: () => setState(() => _showQuickIndex = false),
+              ),
           ],
         ),
       ),
@@ -384,14 +398,17 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   }
 
   Widget _buildMushafPage() {
+    final settings = ref.watch(advancedSettingsProvider);
+    final pageColor = Color(int.parse(settings.mushafPageColorHex.replaceFirst('#', '0xFF')));
+
     return Container(
-      color: _paperColor.withOpacity(_opacity),
+      color: pageColor.withOpacity(_opacity),
       child: SafeArea(
         child: Column(
           children: [
-            _buildSurahHeader(),
+            if (_showControls) _buildSurahHeader(),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             
             Expanded(
               child: lrcLines.isEmpty
@@ -406,7 +423,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
                     )
                   : SingleChildScrollView(
                       controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                       child: _buildFlowingText(),
                     ),
             ),
@@ -417,48 +434,68 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   }
 
   Widget _buildSurahHeader() {
+    final settings = ref.watch(advancedSettingsProvider);
+    final barColor = Color(int.parse(settings.mushafBarColorHex.replaceFirst('#', '0xFF')));
+    final textColor = Color(int.parse(settings.mushafVerseTextColorHex.replaceFirst('#', '0xFF')));
+
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: const Color(0xFFD4AF37).withOpacity(0.5),
-            width: 2,
-          ),
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.auto_awesome, color: const Color(0xFFD4AF37), size: 20),
-              const SizedBox(width: 10),
-              Container(
-                width: 100,
-                height: 2,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      const Color(0xFFD4AF37),
-                      Colors.transparent,
+              // Left side: Index button
+              GestureDetector(
+                onTap: () => setState(() => _showQuickIndex = true),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: barColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: barColor.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.menu_book_rounded, color: barColor, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'السور',
+                        style: GoogleFonts.amiri(
+                          color: barColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Icon(Icons.auto_awesome, color: const Color(0xFFD4AF37), size: 20),
+              
+              // Right side: Surah Name
+              Text(
+                widget.surah.name,
+                style: GoogleFonts.amiri(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: textColor.withOpacity(0.9),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 15),
-          
-          Text(
-            widget.surah.name,
-            style: GoogleFonts.amiri(
-              fontSize: _fontSize + 8,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+          const SizedBox(height: 8),
+          Container(
+            height: 1.5,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  barColor.withOpacity(0.5),
+                  Colors.transparent,
+                ],
+              ),
             ),
           ),
         ],
@@ -470,7 +507,11 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   /// Displays full verses instead of LRC sub-timings.
   Widget _buildFlowingText() {
     final List<InlineSpan> spans = [];
-    
+    final settings = ref.watch(advancedSettingsProvider);
+    final highlightColor = Color(int.parse(settings.mushafVerseHighlightColorHex.replaceFirst('#', '0xFF')));
+    final textColor = Color(int.parse(settings.mushafVerseTextColorHex.replaceFirst('#', '0xFF')));
+    final barColor = Color(int.parse(settings.mushafBarColorHex.replaceFirst('#', '0xFF')));
+
     // Consolidate texts: Use API text if available, else reconstruct from LRC lines
     final List<String> displayVerses = [];
     if (_apiVerseTexts.isNotEmpty) {
@@ -492,7 +533,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
     for (int i = 0; i < displayVerses.length; i++) {
       final isActive = i == _activeVerseIndex;
       final Color bgColor = isActive
-          ? const Color(0xFFFFD700).withOpacity(0.4)
+          ? highlightColor.withOpacity(0.4)
           : Colors.transparent;
 
       spans.add(
@@ -500,7 +541,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
           text: '${displayVerses[i]} ',
           style: _getFontStyle(isActive).copyWith(
             backgroundColor: bgColor,
-            color: isActive ? const Color(0xFFB8860B) : Colors.black87,
+            color: isActive ? highlightColor.withOpacity(0.9) : textColor.withOpacity(0.85),
           ),
         ),
       );
@@ -510,7 +551,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
           text: '\ufd3f${i + 1}\ufd3e ',
           style: GoogleFonts.amiri(
             fontSize: _fontSize * 0.85,
-            color: isActive ? const Color(0xFFB8860B) : const Color(0xFFD4AF37),
+            color: isActive ? highlightColor.withOpacity(0.9) : barColor.withOpacity(0.7),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -575,7 +616,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.8),
+            Colors.black.withOpacity(0.6),
             Colors.transparent,
           ],
         ),
@@ -585,7 +626,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -594,7 +635,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
             const Spacer(),
             
             IconButton(
-              icon: const Icon(Icons.settings, color: AppColors.gold),
+              icon: const Icon(Icons.settings, color: Colors.white70, size: 22),
               onPressed: _showSettingsPanel,
             ),
           ],
@@ -605,13 +646,13 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
 
   Widget _buildBottomControls(PlayerState playerState) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            Colors.black.withOpacity(0.9),
+            Colors.black.withOpacity(0.8),
             Colors.transparent,
           ],
         ),
@@ -621,80 +662,51 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // ─── NEW: Transparent Seek Bar ───
+            _buildProgressBar(playerState),
+            
+            const SizedBox(height: 8),
+            
             Row(
               children: [
                 _buildMiniWaveform(playerState.isPlaying),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Text(
-                            'حالياً: ',
-                            style: TextStyle(
-                              color: Colors.redAccent,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              widget.surah.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        widget.surah.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const Text(
-                        'مزامنة الآية',
+                        'مزامنة الآية الحية',
                         style: TextStyle(
                           color: AppColors.gold,
-                          fontSize: 11,
+                          fontSize: 10,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-            
-            const SizedBox(height: 12),
-            
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.skip_previous, color: Colors.white, size: 32),
-                  onPressed: () {
-                    ref.read(playerProvider.notifier).prevSurah();
-                  },
-                ),
-                const SizedBox(width: 16),
+                
+                // Play/Pause button integrated into the row
                 IconButton(
                   icon: Icon(
                     playerState.isPlaying
                         ? Icons.pause_circle_filled
                         : Icons.play_circle_filled,
                     color: AppColors.gold,
-                    size: 48,
+                    size: 40,
                   ),
                   onPressed: () {
                     ref.read(playerProvider.notifier).togglePlay();
-                  },
-                ),
-                const SizedBox(width: 16),
-                IconButton(
-                  icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
-                  onPressed: () {
-                    ref.read(playerProvider.notifier).nextSurah();
                   },
                 ),
               ],
@@ -703,6 +715,51 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildProgressBar(PlayerState state) {
+    final double progress = state.duration.inMilliseconds > 0
+        ? (state.position.inMilliseconds / state.duration.inMilliseconds).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Column(
+      children: [
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 3,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+            activeTrackColor: AppColors.gold,
+            inactiveTrackColor: Colors.white24,
+            thumbColor: AppColors.gold,
+            overlayColor: AppColors.gold.withOpacity(0.2),
+          ),
+          child: Slider(
+            value: progress,
+            onChanged: (value) {
+              final target = Duration(milliseconds: (value * state.duration.inMilliseconds).toInt());
+              ref.read(playerProvider.notifier).seek(target);
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(_formatDuration(state.position), style: const TextStyle(color: Colors.white70, fontSize: 10)),
+              Text(_formatDuration(state.duration), style: const TextStyle(color: Colors.white70, fontSize: 10)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDuration(Duration d) {
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 
   Widget _buildMiniWaveform(bool isPlaying) {

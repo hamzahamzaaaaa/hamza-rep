@@ -109,6 +109,12 @@ class AdvancedSettings {
   // Independent Mushaf Paper Settings
   final MushafPaperSettings mushafPaperSettings;
   
+  // Custom Mushaf Colors
+  final String mushafPageColorHex;
+  final String mushafBarColorHex;
+  final String mushafVerseHighlightColorHex;
+  final String mushafVerseTextColorHex;
+  
   // Legacy Mushaf Settings (for backward compatibility)
   final MushafTheme mushafTheme;
   final double mushafZoomLevel;
@@ -133,6 +139,10 @@ class AdvancedSettings {
     this.syncDisplayAreaSize = SyncDisplayAreaSize.full,
     this.lrcSettings = const LrcSettings(),
     this.mushafPaperSettings = const MushafPaperSettings(),
+    this.mushafPageColorHex = '#F5E6D3', // Default Sepia
+    this.mushafBarColorHex = '#D4AF37', // Default Gold
+    this.mushafVerseHighlightColorHex = '#FFD700', // Default Golden Yellow
+    this.mushafVerseTextColorHex = '#000000', // Default Black
     this.mushafTheme = MushafTheme.dark,
     this.mushafZoomLevel = 1.0,
     this.arabicFont = ArabicFont.amiri,
@@ -157,6 +167,10 @@ class AdvancedSettings {
     SyncDisplayAreaSize? syncDisplayAreaSize,
     LrcSettings? lrcSettings,
     MushafPaperSettings? mushafPaperSettings,
+    String? mushafPageColorHex,
+    String? mushafBarColorHex,
+    String? mushafVerseHighlightColorHex,
+    String? mushafVerseTextColorHex,
     MushafTheme? mushafTheme,
     double? mushafZoomLevel,
     ArabicFont? arabicFont,
@@ -180,6 +194,10 @@ class AdvancedSettings {
       syncDisplayAreaSize: syncDisplayAreaSize ?? this.syncDisplayAreaSize,
       lrcSettings: lrcSettings ?? this.lrcSettings,
       mushafPaperSettings: mushafPaperSettings ?? this.mushafPaperSettings,
+      mushafPageColorHex: mushafPageColorHex ?? this.mushafPageColorHex,
+      mushafBarColorHex: mushafBarColorHex ?? this.mushafBarColorHex,
+      mushafVerseHighlightColorHex: mushafVerseHighlightColorHex ?? this.mushafVerseHighlightColorHex,
+      mushafVerseTextColorHex: mushafVerseTextColorHex ?? this.mushafVerseTextColorHex,
       mushafTheme: mushafTheme ?? this.mushafTheme,
       mushafZoomLevel: mushafZoomLevel ?? this.mushafZoomLevel,
       arabicFont: arabicFont ?? this.arabicFont,
@@ -211,6 +229,10 @@ class AdvancedSettingsNotifier extends StateNotifier<AdvancedSettings> {
       dimLevel: prefs.getDouble('dim_level') ?? 0.0,
       showSync: prefs.getBool('show_sync') ?? true,
       syncDisplayAreaSize: SyncDisplayAreaSize.values[prefs.getInt('sync_display_area_size') ?? 2],
+      mushafPageColorHex: prefs.getString('mushaf_page_color_hex') ?? '#F5E6D3',
+      mushafBarColorHex: prefs.getString('mushaf_bar_color_hex') ?? '#D4AF37',
+      mushafVerseHighlightColorHex: prefs.getString('mushaf_verse_highlight_color_hex') ?? '#FFD700',
+      mushafVerseTextColorHex: prefs.getString('mushaf_verse_text_color_hex') ?? '#000000',
       mushafTheme: MushafTheme.values[prefs.getInt('mushaf_theme') ?? 3],
       mushafZoomLevel: prefs.getDouble('mushaf_zoom_level') ?? 1.0,
       arabicFont: ArabicFont.values[prefs.getInt('arabic_font') ?? 1],
@@ -349,6 +371,30 @@ class AdvancedSettingsNotifier extends StateNotifier<AdvancedSettings> {
     state = state.copyWith(cloudSyncEnabled: enabled);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('cloud_sync_enabled', enabled);
+  }
+
+  Future<void> setMushafPageColorHex(String hex) async {
+    state = state.copyWith(mushafPageColorHex: hex);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mushaf_page_color_hex', hex);
+  }
+
+  Future<void> setMushafBarColorHex(String hex) async {
+    state = state.copyWith(mushafBarColorHex: hex);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mushaf_bar_color_hex', hex);
+  }
+
+  Future<void> setMushafVerseHighlightColorHex(String hex) async {
+    state = state.copyWith(mushafVerseHighlightColorHex: hex);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mushaf_verse_highlight_color_hex', hex);
+  }
+
+  Future<void> setMushafVerseTextColorHex(String hex) async {
+    state = state.copyWith(mushafVerseTextColorHex: hex);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mushaf_verse_text_color_hex', hex);
   }
 
   /// Get font family name from ArabicFont enum

@@ -134,6 +134,12 @@ class MushafSettingsPanel extends ConsumerWidget {
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
+                    // --- NEW SECTION: Mushaf Custom Colors ---
+                    _buildSectionTitle('ألوان المصحف الورقي', 'Paper Mushaf Colors'),
+                    const SizedBox(height: 12),
+                    _buildMushafColorPickers(ref, notifier),
+                    const SizedBox(height: 24),
+
                     // Section 1: Paper Color (for SmartMushafPage)
                     if (useCustomCallbacks) ...[
                       _buildSectionTitle('لون الورق', 'Paper Color'),
@@ -907,6 +913,131 @@ class MushafSettingsPanel extends ConsumerWidget {
       subtitle: 'حفظ الإعدادات في السحابة',
       value: settings.cloudSyncEnabled,
       onChanged: (v) => notifier.setCloudSyncEnabled(v),
+    );
+  }
+
+  // --- NEW METHOD: Mushaf Color Pickers ---
+  Widget _buildMushafColorPickers(WidgetRef ref, AdvancedSettingsNotifier notifier) {
+    final settings = ref.watch(advancedSettingsProvider);
+
+    return GlassCard(
+      child: Column(
+        children: [
+          _buildColorRow(
+            'لون الصفحة',
+            'Page Color',
+            settings.mushafPageColorHex,
+            (hex) => notifier.setMushafPageColorHex(hex),
+            [
+              ('#F5E6D3', 'سيبيا'),
+              ('#FFFDF5', 'أبيض'),
+              ('#2C2C2C', 'داكن'),
+              ('#1A1A1A', 'أسود'),
+              ('#0D1117', 'ليلي'),
+              ('#1B3A5C', 'أزرق'),
+            ],
+          ),
+          const Divider(color: Colors.white10),
+          _buildColorRow(
+            'لون الشريط',
+            'Bar Color',
+            settings.mushafBarColorHex,
+            (hex) => notifier.setMushafBarColorHex(hex),
+            [
+              ('#D4AF37', 'ذهبي'),
+              ('#1A141F', 'داكن'),
+              ('#2E7D32', 'أخضر'),
+              ('#1565C0', 'أزرق'),
+              ('#C62828', 'أحمر'),
+              ('#888888', 'رمادي'),
+            ],
+          ),
+          const Divider(color: Colors.white10),
+          _buildColorRow(
+            'لون التظليل',
+            'Highlight',
+            settings.mushafVerseHighlightColorHex,
+            (hex) => notifier.setMushafVerseHighlightColorHex(hex),
+            [
+              ('#FFD700', 'ذهبي'),
+              ('#B9F6CA', 'أخضر'),
+              ('#BBDEFB', 'أزرق'),
+              ('#F48FB1', 'وردي'),
+              ('#E1BEE7', 'بنفسجي'),
+              ('#444444', 'رمادي'),
+            ],
+          ),
+          const Divider(color: Colors.white10),
+          _buildColorRow(
+            'لون النص',
+            'Text Color',
+            settings.mushafVerseTextColorHex,
+            (hex) => notifier.setMushafVerseTextColorHex(hex),
+            [
+              ('#000000', 'أسود'),
+              ('#1B3A5C', 'كحلي'),
+              ('#8B0000', 'أحمر'),
+              ('#D4AF37', 'ذهبي'),
+              ('#FFFFFF', 'أبيض'),
+              ('#CCCCCC', 'رمادي'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildColorRow(
+    String labelAr,
+    String labelEn,
+    String currentHex,
+    Function(String) onSelected,
+    List<(String, String)> colors,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(labelAr, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                  Text(labelEn, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
+                ],
+              ),
+              Row(
+                children: colors.map((c) {
+                  final isSelected = currentHex.toUpperCase() == c.$1.toUpperCase();
+                  final colorValue = Color(int.parse(c.$1.replaceFirst('#', '0xFF')));
+                  return GestureDetector(
+                    onTap: () => onSelected(c.$1),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: colorValue,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? AppColors.gold : Colors.white24,
+                          width: isSelected ? 2 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: AppColors.gold.withOpacity(0.5), blurRadius: 4)]
+                            : null,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

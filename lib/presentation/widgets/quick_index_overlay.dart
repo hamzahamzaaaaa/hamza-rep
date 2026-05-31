@@ -76,9 +76,9 @@ class _QuickIndexOverlayState extends ConsumerState<QuickIndexOverlay>
       child: GestureDetector(
         onTap: _dismiss,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
           child: Container(
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withOpacity(0.1),
             child: Align(
               alignment: Alignment.bottomCenter,
               child: GestureDetector(
@@ -86,31 +86,26 @@ class _QuickIndexOverlayState extends ConsumerState<QuickIndexOverlay>
                 child: SlideTransition(
                   position: _slideAnimation,
                   child: Container(
-                    height: screenHeight * 0.68,
+                    height: screenHeight * 0.75,
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(32),
                       ),
                       border: Border.all(
-                        color: AppColors.gold.withOpacity(0.25),
+                        color: AppColors.gold.withOpacity(0.15),
                         width: 1.0,
                       ),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.08),
-                          Colors.white.withOpacity(0.03),
+                          Colors.black.withOpacity(0.4),
+                          Colors.black.withOpacity(0.2),
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.6),
-                          blurRadius: 40,
-                          spreadRadius: 5,
-                        ),
-                        BoxShadow(
-                          color: AppColors.gold.withOpacity(0.05),
+                          color: Colors.black.withOpacity(0.3),
                           blurRadius: 20,
                           spreadRadius: 2,
                         ),
@@ -121,7 +116,7 @@ class _QuickIndexOverlayState extends ConsumerState<QuickIndexOverlay>
                         top: Radius.circular(32),
                       ),
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                         child: Column(
                           children: [
                             // Handle bar
