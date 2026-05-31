@@ -8,6 +8,7 @@
 /// - Start/end time selection
 /// - Real-time preview
 /// - Precise trimming for verse clipping
+library;
 
 import 'package:flutter/material.dart';
 import '../../core/constants/colors.dart';
@@ -34,8 +35,8 @@ class WaveformTrimmer extends StatefulWidget {
 class _WaveformTrimmerState extends State<WaveformTrimmer> {
   late double _startPosition;
   late double _endPosition;
-  bool _isDraggingStart = false;
-  bool _isDraggingEnd = false;
+  final bool _isDraggingStart = false;
+  final bool _isDraggingEnd = false;
   Duration? _previewPosition;
   
   @override
@@ -319,7 +320,7 @@ class WaveformPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     // Generate waveform bars
-    final barCount = 100;
+    const barCount = 100;
     final barWidth = size.width / barCount;
     final random = _generateWaveformData(barCount);
 

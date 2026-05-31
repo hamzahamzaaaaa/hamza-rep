@@ -7,6 +7,7 @@
 /// - Automatic save/load on app start
 /// - CRUD operations for clips
 /// - Backup/export functionality
+library;
 
 import 'dart:convert';
 import 'dart:io';

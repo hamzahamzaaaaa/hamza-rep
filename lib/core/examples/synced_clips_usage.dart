@@ -4,6 +4,7 @@
 /// 
 /// This file shows how to integrate the complete Synced Clips System
 /// into your existing app workflow.
+library;
 
 import 'package:flutter/material.dart';
 import '../core/services/verse_clip_engine.dart';
@@ -93,7 +94,7 @@ class WaveformTrimmerExample {
         surahName: surahName,
         verseNumber: verseNumber,
         onTrimComplete: (startTime, endTime) {
-          print('✂️ Trimmed from ${startTime} to ${endTime}');
+          print('✂️ Trimmed from $startTime to $endTime');
           // TODO: Pass these times to the clipping engine
         },
       ),

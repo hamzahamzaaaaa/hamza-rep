@@ -79,12 +79,12 @@ class MushafEngine extends StatefulWidget {
   final String? surahName; // Added for backward compatibility
 
   const MushafEngine({
-    Key? key,
+    super.key,
     required this.surahId,
     this.lrcUrl,
     required this.position,
     this.surahName, // Optional parameter
-  }) : super(key: key);
+  });
 
   @override
   State<MushafEngine> createState() => _MushafEngineState();
@@ -481,7 +481,7 @@ class _MushafEngineState extends State<MushafEngine>
     
     const textAreaStartY = 0.10;
     const textAreaEndY = 0.90;
-    final textAreaHeight = textAreaEndY - textAreaStartY;
+    const textAreaHeight = textAreaEndY - textAreaStartY;
     
     const totalLinesPerPage = 15;
     
@@ -590,7 +590,7 @@ class _MushafEngineState extends State<MushafEngine>
   Widget _buildLoadingScreen() {
     return Container(
       color: Colors.black,
-      child: Center(
+      child: const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -622,15 +622,15 @@ class _MushafEngineState extends State<MushafEngine>
       color: Colors.black,
       child: Center(
         child: Padding(
-          padding: EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off_outlined, color: Color(0xFFB8860B), size: 64),
-              SizedBox(height: 16),
+              const Icon(Icons.cloud_off_outlined, color: Color(0xFFB8860B), size: 64),
+              const SizedBox(height: 16),
               Text(
                 _errorDetails!,
-                style: TextStyle(color: Color(0xFFB8860B), fontSize: 16),
+                style: const TextStyle(color: Color(0xFFB8860B), fontSize: 16),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -642,13 +642,13 @@ class _MushafEngineState extends State<MushafEngine>
 
   Widget _buildFallbackIndicator() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.7),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFB8860B).withOpacity(0.5)),
+        border: Border.all(color: const Color(0xFFB8860B).withOpacity(0.5)),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.offline_bolt, color: Color(0xFFB8860B), size: 16),
@@ -674,7 +674,7 @@ class _MushafEngineState extends State<MushafEngine>
       // Show loading indicator while PDF is loading
       return Container(
         color: Colors.black,
-        child: Center(
+        child: const Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -712,14 +712,14 @@ class _MushafEngineState extends State<MushafEngine>
 
   Widget _buildLyricsOverlay(WidgetRef ref) {
     final currentVerseText = _getCurrentVerseText();
-    if (currentVerseText.isEmpty) return SizedBox.shrink();
+    if (currentVerseText.isEmpty) return const SizedBox.shrink();
 
     final settings = ref.watch(advancedSettingsProvider);
     final fontColor = _hexToColor(settings.syncFontColorHex);
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -732,7 +732,7 @@ class _MushafEngineState extends State<MushafEngine>
         ),
         border: Border(
           top: BorderSide(
-            color: Color(0xFFFFD700).withOpacity(0.3),
+            color: const Color(0xFFFFD700).withOpacity(0.3),
             width: 1.5,
           ),
         ),
@@ -752,16 +752,16 @@ class _MushafEngineState extends State<MushafEngine>
                 fontWeight: FontWeight.w700,
                 shadows: [
                   Shadow(
-                    color: Color(0xFFFFD700).withOpacity(0.4),
+                    color: const Color(0xFFFFD700).withOpacity(0.4),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ).copyWith(
                 fontFamilyFallback: const ['Noto Sans Arabic', 'Arial'],
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'صفحة $_displayedPageNumber',
               textDirection: TextDirection.rtl,

@@ -8,10 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../core/models/surah.dart';
 import '../../core/constants/colors.dart';
 import '../../core/providers/player_provider.dart';
-import '../../core/providers/advanced_settings_provider.dart';
 import '../widgets/mushaf_settings_panel.dart';
-import '../widgets/quick_index_overlay.dart';
-import '../widgets/sync_settings_bottom_sheet.dart';
 
 /// ============================================================================
 /// SMART MUSHAF PAGE - تجربة المصحف الورقي الكاملة
@@ -50,29 +47,24 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   List<String> _apiVerseTexts = [];  // empty = API not loaded yet
 
   // Tracks the last position we synced so we skip redundant work
-  final Duration _lastSyncedPosition = const Duration(seconds: -1);
+  Duration _lastSyncedPosition = const Duration(seconds: -1);
 
   // Display settings
   bool _showControls = true;
   Timer? _hideTimer;
   
   // Paper customization
-  Color _paperColor = const Color(0xFF001219); // Deep Midnight Blue
+  Color _paperColor = const Color(0xFFF5E6D3); // Sepia
   double _fontSize = 32.0;
   String _fontName = 'Amiri';
   double _opacity = 1.0;
-
-  bool _showQuickIndex = false;
   
   // Offset correction for sync (in milliseconds)
   int syncOffsetMs = -500; // Subtracts 500ms from current time to prevent early jumping
 
-  late Surah _currentSurah;
-
   @override
   void initState() {
     super.initState();
-    _currentSurah = widget.surah;
     _loadLrc();
     _startAutoHideTimer();
   }
@@ -80,9 +72,8 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   @override
   void didUpdateWidget(SmartMushafPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Dynamic Loading - Clear old data when surah changes
+    // Feature 3: Dynamic Loading - Clear old data when surah changes
     if (oldWidget.surah.id != widget.surah.id) {
-      _currentSurah = widget.surah;
       setState(() {
         lrcLines.clear();
         _apiVerseTexts.clear();
@@ -102,7 +93,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
 
   /// Load LRC synchronization data AND Quran verse text from alquran.cloud
   Future<void> _loadLrc() async {
-    if (_currentSurah.lrcUrl == null || _currentSurah.lrcUrl!.isEmpty) {
+    if (widget.surah.lrcUrl == null || widget.surah.lrcUrl!.isEmpty) {
       setState(() => _isLoadingLrc = false);
       return;
     }
@@ -110,18 +101,18 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
     try {
       // ── Step 1: Load LRC file as timing engine ──────────────────────────
       String content;
-      if (_currentSurah.lrcUrl!.startsWith('http')) {
-        final response = await http.get(Uri.parse(_currentSurah.lrcUrl!));
+      if (widget.surah.lrcUrl!.startsWith('http')) {
+        final response = await http.get(Uri.parse(widget.surah.lrcUrl!));
         content = utf8.decode(response.bodyBytes);
       } else {
-        final byteData = await rootBundle.load(_currentSurah.lrcUrl!);
+        final byteData = await rootBundle.load(widget.surah.lrcUrl!);
         content = utf8.decode(byteData.buffer.asUint8List());
       }
 
       final entries = _parseLRC(content);
 
       // ── Step 2: Fetch verified Uthmanic text from alquran.cloud ─────────
-      final surahNum = _currentSurah.mushafIndex;
+      final surahNum = widget.surah.mushafIndex;
       List<String> apiTexts = [];
 
       if (surahNum < 999) {
@@ -153,10 +144,8 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
         }
       }
 
-      final groupedEntries = _groupLrcByVerse(entries);
-
       setState(() {
-        lrcLines = groupedEntries;
+        lrcLines = entries;
         _apiVerseTexts = apiTexts;
         _isLoadingLrc = false;
       });
@@ -164,41 +153,6 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
       debugPrint('Error loading LRC: $e');
       setState(() => _isLoadingLrc = false);
     }
-  }
-
-  List<LrcEntry> _groupLrcByVerse(List<LrcEntry> entries) {
-    if (entries.isEmpty) return [];
-    
-    List<LrcEntry> grouped = [];
-    int currentApiIndex = -1;
-    LrcEntry? currentGroup;
-
-    for (var entry in entries) {
-      if (entry.apiVerseIndex != currentApiIndex) {
-        if (currentGroup != null) {
-          grouped.add(currentGroup);
-        }
-        currentApiIndex = entry.apiVerseIndex;
-        currentGroup = LrcEntry(
-          startTime: entry.startTime,
-          verseText: entry.verseText,
-          verseNumber: entry.verseNumber,
-          apiVerseIndex: entry.apiVerseIndex,
-        );
-      } else if (currentGroup != null) {
-        currentGroup = LrcEntry(
-          startTime: currentGroup.startTime,
-          verseText: '${currentGroup.verseText} ${entry.verseText}'.trim(),
-          verseNumber: currentGroup.verseNumber,
-          apiVerseIndex: currentGroup.apiVerseIndex,
-        );
-      }
-    }
-    
-    if (currentGroup != null) {
-      grouped.add(currentGroup);
-    }
-    return grouped;
   }
 
   /// Normalizes Arabic text for accurate matching (removes tashkeel, standardizes letters)
@@ -304,7 +258,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
 
   void _startAutoHideTimer() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 4), () {
+    _hideTimer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
         setState(() => _showControls = false);
       }
@@ -349,44 +303,19 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   void _scrollToActiveVerse() {
     if (!_scrollController.hasClients || lrcLines.isEmpty || _activeVerseIndex < 0) return;
     
-    // FEATURE 1: Viewport Bounce Logic (3rd/4th Line Rule)
-    // - Starts at top.
-    // - Moves down to bottom area.
-    // - When nearing the bottom, jumps back to bring active line to 4th position.
+    // We now scroll based on the number of actual verses, not LRC entries
+    final totalVerses = _apiVerseTexts.isNotEmpty ? _apiVerseTexts.length : lrcLines.last.apiVerseIndex + 1;
+    if (totalVerses <= 0) return;
     
-    final double estimatedLineHeight = _fontSize * 2.2;
-    final viewportHeight = _scrollController.position.viewportDimension;
+    final fraction = _activeVerseIndex / totalVerses;
     final maxScroll = _scrollController.position.maxScrollExtent;
+    final targetScroll = (fraction * maxScroll).clamp(0.0, maxScroll);
     
-    // Current position of the active line in pixels
-    final activeLineTop = _activeVerseIndex * estimatedLineHeight;
-    final currentScroll = _scrollController.offset;
-    
-    // Where is the active line relative to the viewport?
-    final relativePos = activeLineTop - currentScroll;
-    
-    // Thresholds
-    final upperSafeLine = 1.5 * estimatedLineHeight; // 2nd line
-    final lowerSafeZone = viewportHeight - (2 * estimatedLineHeight); // Near bottom
-    
-    double targetScroll = currentScroll;
-    
-    if (relativePos > lowerSafeZone) {
-      // We are hitting the bottom! Re-center to 4th line position
-      targetScroll = activeLineTop - upperSafeLine;
-    } else if (relativePos < 0) {
-      // Just in case we seek backwards
-      targetScroll = activeLineTop - upperSafeLine;
-    }
-    
-    // If we changed, animate
-    if ((targetScroll - currentScroll).abs() > 10) {
-      _scrollController.animateTo(
-        targetScroll.clamp(0.0, maxScroll),
-        duration: const Duration(milliseconds: 700),
-        curve: Curves.easeInOutCubic,
-      );
-    }
+    _scrollController.animateTo(
+      targetScroll,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   @override
@@ -405,7 +334,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
           
           if (foundIndex != -1) {
             // معالجة الفهارس (Index Alignment) للحفاظ على التجميع
-            final activeVerseIndex = foundIndex; // Since grouped, index is the verse
+            final activeVerseIndex = lrcLines[foundIndex].apiVerseIndex;
             
             if (activeVerseIndex != _activeVerseIndex) {
               setState(() {
@@ -414,32 +343,6 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
               // تفعيل التمرير القسري واللحظي
               _scrollToActiveVerse();
             }
-          }
-        }
-      },
-    );
-
-    // ── STATE REFRESH ON SURAH CHANGE ─────────────────────────────────────
-    ref.listen<Surah?>(
-      playerProvider.select((s) => s.currentSurah),
-      (previous, current) {
-        if (current != null && mounted) {
-          if (_currentSurah.id != current.id) {
-            _currentSurah = current;
-            if (_scrollController.hasClients) {
-              _scrollController.animateTo(
-                0.0,
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.easeInOut,
-              );
-            }
-            setState(() {
-              lrcLines.clear();
-              _apiVerseTexts.clear();
-              _activeVerseIndex = -1;
-              _isLoadingLrc = true;
-            });
-            _loadLrc();
           }
         }
       },
@@ -474,16 +377,6 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
                 right: 0,
                 child: _buildBottomControls(playerState),
               ),
-
-            if (_showQuickIndex)
-              QuickIndexOverlay(
-                surahs: widget.playlist,
-                onSurahSelected: (surah) {
-                  ref.read(playerProvider.notifier).playSurah(surah, widget.playlist);
-                  setState(() => _showQuickIndex = false);
-                },
-                onClose: () => setState(() => _showQuickIndex = false),
-              ),
           ],
         ),
       ),
@@ -491,17 +384,14 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   }
 
   Widget _buildMushafPage() {
-    final settings = ref.watch(advancedSettingsProvider);
-    final pageColor = Color(int.parse(settings.mushafPageColorHex.replaceFirst('#', '0xFF')));
-
     return Container(
-      color: pageColor.withOpacity(_opacity),
+      color: _paperColor.withOpacity(_opacity),
       child: SafeArea(
         child: Column(
           children: [
-            if (_showControls) _buildSurahHeader(),
+            _buildSurahHeader(),
             
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
             
             Expanded(
               child: lrcLines.isEmpty
@@ -516,7 +406,7 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
                     )
                   : SingleChildScrollView(
                       controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       child: _buildFlowingText(),
                     ),
             ),
@@ -527,68 +417,48 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   }
 
   Widget _buildSurahHeader() {
-    final settings = ref.watch(advancedSettingsProvider);
-    final barColor = Color(int.parse(settings.mushafBarColorHex.replaceFirst('#', '0xFF')));
-    final textColor = Color(int.parse(settings.mushafVerseTextColorHex.replaceFirst('#', '0xFF')));
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: const Color(0xFFD4AF37).withOpacity(0.5),
+            width: 2,
+          ),
+        ),
+      ),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Left side: Index button
-              GestureDetector(
-                onTap: () => setState(() => _showQuickIndex = true),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: barColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: barColor.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.menu_book_rounded, color: barColor, size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        'السور',
-                        style: GoogleFonts.amiri(
-                          color: barColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+              Icon(Icons.auto_awesome, color: const Color(0xFFD4AF37), size: 20),
+              const SizedBox(width: 10),
+              Container(
+                width: 100,
+                height: 2,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      const Color(0xFFD4AF37),
+                      Colors.transparent,
                     ],
                   ),
                 ),
               ),
-              
-              // Right side: Surah Name
-              Text(
-                _currentSurah.name,
-                style: GoogleFonts.amiri(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: textColor.withOpacity(0.9),
-                ),
-              ),
+              const SizedBox(width: 10),
+              Icon(Icons.auto_awesome, color: const Color(0xFFD4AF37), size: 20),
             ],
           ),
-          const SizedBox(height: 8),
-          Container(
-            height: 1.5,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  barColor.withOpacity(0.5),
-                  Colors.transparent,
-                ],
-              ),
+          const SizedBox(height: 15),
+          
+          Text(
+            widget.surah.name,
+            style: GoogleFonts.amiri(
+              fontSize: _fontSize + 8,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
         ],
@@ -600,65 +470,58 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   /// Displays full verses instead of LRC sub-timings.
   Widget _buildFlowingText() {
     final List<InlineSpan> spans = [];
-    final settings = ref.watch(advancedSettingsProvider);
-    final highlightColor = Color(int.parse(settings.mushafVerseHighlightColorHex.replaceFirst('#', '0xFF')));
-    final textColor = Color(int.parse(settings.mushafVerseTextColorHex.replaceFirst('#', '0xFF')));
-    final barColor = Color(int.parse(settings.mushafBarColorHex.replaceFirst('#', '0xFF')));
-
-    // Determine the active API verse index based on current LRC position
-    int activeApiIndex = -1;
-    if (_activeVerseIndex >= 0 && _activeVerseIndex < lrcLines.length) {
-      activeApiIndex = lrcLines[_activeVerseIndex].apiVerseIndex;
+    
+    // Consolidate texts: Use API text if available, else reconstruct from LRC lines
+    final List<String> displayVerses = [];
+    if (_apiVerseTexts.isNotEmpty) {
+      displayVerses.addAll(_apiVerseTexts);
+    } else {
+      Map<int, String> lrcVerses = {};
+      for (var line in lrcLines) {
+        if (line.apiVerseIndex >= 0) {
+          final prefix = lrcVerses.containsKey(line.apiVerseIndex) ? lrcVerses[line.apiVerseIndex]! + ' ' : '';
+          lrcVerses[line.apiVerseIndex] = prefix + line.verseText;
+        }
+      }
+      final maxIndex = lrcVerses.keys.isNotEmpty ? lrcVerses.keys.reduce((a, b) => a > b ? a : b) : -1;
+      for (int i = 0; i <= maxIndex; i++) {
+        displayVerses.add(lrcVerses[i]?.trim() ?? '');
+      }
     }
 
-    // STRICT LRC MODE: We follow lrcLines exactly for highlighting pieces
-    // but use apiVerseIndex for numbering logic.
-    for (int i = 0; i < lrcLines.length; i++) {
+    for (int i = 0; i < displayVerses.length; i++) {
       final isActive = i == _activeVerseIndex;
       final Color bgColor = isActive
-          ? highlightColor.withOpacity(0.7) 
+          ? const Color(0xFFFFD700).withOpacity(0.4)
           : Colors.transparent;
 
       spans.add(
         TextSpan(
-          text: '${lrcLines[i].verseText} ',
+          text: '${displayVerses[i]} ',
           style: _getFontStyle(isActive).copyWith(
             backgroundColor: bgColor,
-            color: isActive 
-                ? (highlightColor.computeLuminance() > 0.5 ? Colors.black : Colors.white)
-                : textColor.withOpacity(0.85),
+            color: isActive ? const Color(0xFFB8860B) : Colors.black87,
           ),
         ),
       );
-      
-      // Verse number logic based on API alignment
-      // Only show after the last segment of an API verse
-      bool isEndOfVerse = false;
-      if (i == lrcLines.length - 1) {
-        isEndOfVerse = true;
-      } else if (lrcLines[i].apiVerseIndex != lrcLines[i + 1].apiVerseIndex) {
-        isEndOfVerse = true;
-      }
 
-      if (isEndOfVerse) {
-         spans.add(
-          TextSpan(
-            text: ' \ufd3f${lrcLines[i].apiVerseIndex + 1}\ufd3e ',
-            style: GoogleFonts.amiri(
-              fontSize: _fontSize * 0.7,
-              color: isActive ? highlightColor : barColor.withOpacity(0.5),
-              fontWeight: FontWeight.bold,
-            ),
+      spans.add(
+        TextSpan(
+          text: '\ufd3f${i + 1}\ufd3e ',
+          style: GoogleFonts.amiri(
+            fontSize: _fontSize * 0.85,
+            color: isActive ? const Color(0xFFB8860B) : const Color(0xFFD4AF37),
+            fontWeight: FontWeight.bold,
           ),
-        );
-      }
+        ),
+      );
     }
 
     return RichText(
       textAlign: TextAlign.justify,
       textDirection: TextDirection.rtl,
       text: TextSpan(
-        style: const TextStyle(height: 2.2),
+        style: const TextStyle(height: 2.0),
         children: spans,
       ),
     );
@@ -706,13 +569,13 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
 
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.6),
+            Colors.black.withOpacity(0.8),
             Colors.transparent,
           ],
         ),
@@ -722,53 +585,16 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             
-            const SizedBox(width: 4),
-
-            // Redesigned Swar Button to prevent overlap
-            GestureDetector(
-              onTap: () => setState(() => _showQuickIndex = true),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.gold.withOpacity(0.3)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.menu_book, color: AppColors.gold, size: 16),
-                    SizedBox(width: 6),
-                    Text(
-                      'السور',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             const Spacer(),
             
-            Text(
-              _currentSurah.name,
-              style: GoogleFonts.amiri(
-                color: AppColors.gold,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            
-            const SizedBox(width: 12),
-
             IconButton(
-              icon: const Icon(Icons.settings, color: Colors.white70, size: 22),
+              icon: const Icon(Icons.settings, color: AppColors.gold),
               onPressed: _showSettingsPanel,
             ),
           ],
@@ -779,13 +605,13 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
 
   Widget _buildBottomControls(PlayerState playerState) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            Colors.black.withOpacity(0.8),
+            Colors.black.withOpacity(0.9),
             Colors.transparent,
           ],
         ),
@@ -795,109 +621,81 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ─── NEW: Transparent Seek Bar ───
-            _buildProgressBar(playerState),
-            
-            const SizedBox(height: 8),
-            
             Row(
               children: [
                 _buildMiniWaveform(playerState.isPlaying),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _currentSurah.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          const Text(
+                            'حالياً: ',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              widget.surah.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                       const Text(
-                        'مزامنة الآية الحية',
+                        'مزامنة الآية',
                         style: TextStyle(
                           color: AppColors.gold,
-                          fontSize: 10,
+                          fontSize: 11,
                         ),
                       ),
                     ],
                   ),
                 ),
-                
-                // Playback Controls Row
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.skip_previous, color: Colors.white, size: 28),
-                      onPressed: () => ref.read(playerProvider.notifier).prevSurah(),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        playerState.isPlaying
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_filled,
-                        color: AppColors.gold,
-                        size: 44,
-                      ),
-                      onPressed: () => ref.read(playerProvider.notifier).togglePlay(),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_next, color: Colors.white, size: 28),
-                      onPressed: () => ref.read(playerProvider.notifier).nextSurah(),
-                    ),
-                  ],
-                ),
               ],
             ),
             
             const SizedBox(height: 12),
-
-            // Secondary Controls Row: Repeat, Hifz Help, Offset
+            
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: Icon(
-                    playerState.isRepeat ? Icons.repeat_one : Icons.repeat,
-                    color: playerState.isRepeat ? AppColors.gold : Colors.white70,
-                    size: 22,
-                  ),
-                  onPressed: () => ref.read(playerProvider.notifier).toggleRepeat(),
-                ),
-                
-                TextButton.icon(
+                  icon: const Icon(Icons.skip_previous, color: Colors.white, size: 32),
                   onPressed: () {
-                    showSyncSettingsBottomSheet(context, ref);
+                    ref.read(playerProvider.notifier).prevSurah();
                   },
-                  icon: const Icon(Icons.psychology_alt, color: AppColors.gold, size: 20),
-                  label: const Text(
-                    'مساعد الحفظ',
-                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                  ),
                 ),
-
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.history, color: Colors.white60, size: 22),
-                      onPressed: () => setState(() => syncOffsetMs -= 100),
-                    ),
-                    Text(
-                      '${syncOffsetMs}ms',
-                      style: const TextStyle(color: AppColors.gold, fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.update, color: Colors.white60, size: 22),
-                      onPressed: () => setState(() => syncOffsetMs += 100),
-                    ),
-                  ],
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: Icon(
+                    playerState.isPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_filled,
+                    color: AppColors.gold,
+                    size: 48,
+                  ),
+                  onPressed: () {
+                    ref.read(playerProvider.notifier).togglePlay();
+                  },
+                ),
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
+                  onPressed: () {
+                    ref.read(playerProvider.notifier).nextSurah();
+                  },
                 ),
               ],
             ),
@@ -905,51 +703,6 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
         ),
       ),
     );
-  }
-
-  Widget _buildProgressBar(PlayerState state) {
-    final double progress = state.duration.inMilliseconds > 0
-        ? (state.position.inMilliseconds / state.duration.inMilliseconds).clamp(0.0, 1.0)
-        : 0.0;
-
-    return Column(
-      children: [
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 3,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 4),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-            activeTrackColor: Colors.transparent,
-            inactiveTrackColor: Colors.transparent,
-            thumbColor: AppColors.gold,
-            overlayColor: AppColors.gold.withOpacity(0.2),
-          ),
-          child: Slider(
-            value: progress,
-            onChanged: (value) {
-              final target = Duration(milliseconds: (value * state.duration.inMilliseconds).toInt());
-              ref.read(playerProvider.notifier).seek(target);
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(_formatDuration(state.position), style: const TextStyle(color: Colors.white70, fontSize: 10)),
-              Text(_formatDuration(state.duration), style: const TextStyle(color: Colors.white70, fontSize: 10)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _formatDuration(Duration d) {
-    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$minutes:$seconds';
   }
 
   Widget _buildMiniWaveform(bool isPlaying) {

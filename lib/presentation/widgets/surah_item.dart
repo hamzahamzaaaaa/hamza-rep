@@ -16,7 +16,6 @@ import '../pages/downloads_page.dart';
 import '../pages/all_surahs_page.dart';
 import '../pages/smart_mushaf_page.dart';
 import 'settings_sheet.dart';
-import 'player_modal.dart';
 import 'mushaf_settings_panel.dart';
 import 'waveform_visualizer.dart';
 

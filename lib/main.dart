@@ -35,7 +35,6 @@ import 'presentation/pages/splash_page.dart';
 import 'presentation/widgets/global_search.dart';
 
 import 'presentation/pages/quran_index_page.dart';
-import 'presentation/pages/offline_player_page.dart';
 import 'presentation/pages/statistics_page.dart';
 import 'presentation/widgets/player_modal.dart';
 

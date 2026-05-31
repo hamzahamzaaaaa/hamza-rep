@@ -106,7 +106,7 @@ class _CinematicVerseDisplayState extends State<CinematicVerseDisplay>
           ),
 
           // Layer 2: Glassmorphism overlay
-          GlassOverlay(
+          const GlassOverlay(
             blurX: 30.0,
             blurY: 30.0,
             dimLevel: 0.4,
@@ -228,7 +228,7 @@ class _CinematicVerseDisplayState extends State<CinematicVerseDisplay>
           // Time display (reset to 00:00)
           Text(
             _formatDuration(widget.currentPosition),
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.gold,
               fontSize: 32,
               fontWeight: FontWeight.bold,

@@ -57,7 +57,7 @@ class EnhancedSyncSettingsSheet extends ConsumerWidget {
             const SizedBox(height: 16),
 
             // Title
-            Text(
+            const Text(
               'إعدادات المزامنة',
               style: TextStyle(
                 color: AppColors.gold,
@@ -202,7 +202,7 @@ class EnhancedSyncSettingsSheet extends ConsumerWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.gold,
+            activeThumbColor: AppColors.gold,
           ),
         ],
       ),

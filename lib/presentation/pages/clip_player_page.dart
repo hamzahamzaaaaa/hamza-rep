@@ -8,6 +8,7 @@
 /// - Timer reset to 00:00
 /// - Loop functionality
 /// - Glassmorphism UI
+library;
 
 import 'package:flutter/material.dart';
 import '../../core/models/verse_clip.dart';

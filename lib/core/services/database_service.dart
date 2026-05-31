@@ -11,9 +11,7 @@ class DatabaseService {
   DatabaseService._init();
 
   Future<void> _initPrefs() async {
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-    }
+    _prefs ??= await SharedPreferences.getInstance();
   }
 
   Future<void> saveDuration(String id, int seconds) async {

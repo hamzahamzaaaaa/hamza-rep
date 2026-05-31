@@ -407,7 +407,7 @@ class GlassSettingsTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.gold,
+            activeThumbColor: AppColors.gold,
           ),
         ],
       ),

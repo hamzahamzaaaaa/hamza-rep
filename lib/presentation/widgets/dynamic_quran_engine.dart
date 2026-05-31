@@ -77,7 +77,7 @@ class _DynamicQuranEngineState extends State<DynamicQuranEngine>
   int _currentVerseIndex = -1;
 
   // إحداثيات الآيات
-  Map<int, List<VerseCoordinates>> _verseCoordinatesMap = {};
+  final Map<int, List<VerseCoordinates>> _verseCoordinatesMap = {};
   
   // مؤثرات الحركة للتظليل الذهبي
   late AnimationController _glowController;
@@ -151,8 +151,6 @@ class _DynamicQuranEngineState extends State<DynamicQuranEngine>
           throw Exception('LRC file not found');
         }
       }
-
-      if (fileContent == null) throw Exception('LRC content is null');
 
       // تحليل LRC
       final parsedLines = _parseLRC(fileContent);
@@ -385,7 +383,7 @@ class _DynamicQuranEngineState extends State<DynamicQuranEngine>
     try {
       // استخدام Quran.com API للحصول على بيانات الصفحة
       // ملاحظة: هذا API تجريبي وقد يحتاج لتعديل
-      final url = 'https://api.quran.com/api/v4/quran/verses/uthmani';
+      const url = 'https://api.quran.com/api/v4/quran/verses/uthmani';
       
       final response = await _dio.get(url, queryParameters: {
         'page_number': pageNumber,
@@ -447,8 +445,8 @@ class _DynamicQuranEngineState extends State<DynamicQuranEngine>
 
       final y = 0.05 + (lineIndex * lineHeight);
       final x = lineStartX + (verseInLine == 0 ? 0.0 : lineWidth / 2);
-      final width = lineWidth / 2;
-      final height = lineHeight * 0.9;
+      const width = lineWidth / 2;
+      const height = lineHeight * 0.9;
 
       coordinates.add(VerseCoordinates(
         pageNumber: pageNumber,
@@ -471,9 +469,9 @@ class _DynamicQuranEngineState extends State<DynamicQuranEngine>
     int totalVerses,
   ) {
     const linesPerPage = 15;
-    final lineHeight = 0.055;
-    final lineWidth = 0.84;
-    final lineStartX = 0.08;
+    const lineHeight = 0.055;
+    const lineWidth = 0.84;
+    const lineStartX = 0.08;
 
     final lineIndex = (index / 2).floor() % linesPerPage;
     final verseInLine = index % 2;

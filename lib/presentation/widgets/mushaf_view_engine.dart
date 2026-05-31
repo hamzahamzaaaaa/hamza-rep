@@ -429,8 +429,8 @@ class _MushafViewEngineState extends State<MushafViewEngine>
     final lineIndex = (verseInPage / 2).floor() % linesPerPage;
     final isRightHalf = verseInPage % 2 == 0;
 
-    final lineHeight = 0.055;
-    final lineWidth = 0.42;
+    const lineHeight = 0.055;
+    const lineWidth = 0.42;
     final lineStartX = isRightHalf ? 0.50 : 0.06;
 
     return VerseHighlightCoords(

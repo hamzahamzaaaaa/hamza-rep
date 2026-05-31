@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/download_provider_stub.dart'
     if (dart.library.io) '../../core/providers/download_provider_io.dart';
 import '../../core/providers/advanced_settings_provider.dart';
-import '../../core/constants/colors.dart';
 
 class LrcLine {
   final Duration time;

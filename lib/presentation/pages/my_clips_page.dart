@@ -8,6 +8,7 @@
 /// - Play count and duration
 /// - Bookmark support
 /// - Delete functionality
+library;
 
 import 'package:flutter/material.dart';
 import '../../core/services/verse_clips_database.dart';
@@ -206,7 +207,7 @@ class _MyClipsPageState extends State<MyClipsPage> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.timer,
                       size: 14,
                       color: Colors.white70,
@@ -214,13 +215,13 @@ class _MyClipsPageState extends State<MyClipsPage> {
                     const SizedBox(width: 4),
                     Text(
                       _formatDuration(clip.clipDuration),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 12,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Icon(
+                    const Icon(
                       Icons.play_circle_outline,
                       size: 14,
                       color: Colors.white70,
@@ -228,7 +229,7 @@ class _MyClipsPageState extends State<MyClipsPage> {
                     const SizedBox(width: 4),
                     Text(
                       '${clip.playCount} تشغيل',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 12,
                       ),

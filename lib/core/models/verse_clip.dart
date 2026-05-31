@@ -7,6 +7,7 @@
 /// - Complete synchronization metadata
 /// - Word-level timing for karaoke-style highlighting
 /// - Standalone sync file support (JSON/LRC)
+library;
 
 class VerseClip {
   final String id; // Unique identifier: "surah_2_verse_255"

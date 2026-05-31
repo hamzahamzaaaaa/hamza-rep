@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 
-import 'global_search.dart';
 import '../../core/providers/player_provider.dart';
 import '../../core/providers/content_provider.dart';
 import '../../core/constants/colors.dart';
@@ -17,12 +16,10 @@ import 'synced_lyrics_widget.dart';
 import 'mushaf_view_widget.dart';
 import '../../core/providers/language_provider.dart';
 import '../../core/providers/advanced_settings_provider.dart';
-import '../../core/providers/lrc_and_mushaf_settings_provider.dart';
 import '../../core/data/telawat_2018.dart';
 import '../../core/data/telawat_2020.dart';
 import '../../core/data/telawat_2022.dart';
 import '../pages/all_surahs_page.dart';
-import '../pages/quran_page.dart';
 import 'mushaf_settings_panel.dart';
 
 enum ViewMode { none, lrc, mushaf }

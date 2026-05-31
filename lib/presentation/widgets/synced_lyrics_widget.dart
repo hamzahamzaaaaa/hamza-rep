@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dio/dio.dart';
-import '../../core/constants/colors.dart';
 import '../../core/providers/advanced_settings_provider.dart';
 import 'dart:io';
 import 'dart:async';

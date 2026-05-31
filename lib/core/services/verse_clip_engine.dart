@@ -169,7 +169,7 @@ class VerseClipEngine {
     if (verseStartTime == null) return null;
 
     return (
-      startTime: verseStartTime!,
+      startTime: verseStartTime,
       endTime: nextVerseStartTime!,
     );
   }
