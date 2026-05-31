@@ -40,6 +40,7 @@ class SmartMushafPage extends ConsumerStatefulWidget {
 class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   // ── LRC (Timing Engine) ──────────────────────────────────────────────────
   List<LrcEntry> lrcLines = [];
+  final List<GlobalKey> _verseKeys = [];
 
   /// The index of the currently highlighted verse.
   int _activeVerseIndex = -1;
@@ -153,10 +154,17 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
         }
       }
 
-      final groupedEntries = _groupLrcByVerse(entries);
+      // CRITICAL FIX: The user wants long verses to be highlighted PART BY PART.
+      // We will NO LONGER merge the LRC entries into a single group.
+      // Instead, each LRC line (segment) will be its own highlight block.
+      
+      _verseKeys.clear();
+      for (int i = 0; i < entries.length; i++) {
+        _verseKeys.add(GlobalKey());
+      }
 
       setState(() {
-        lrcLines = groupedEntries;
+        lrcLines = entries; // Use the raw segments as requested
         _apiVerseTexts = apiTexts;
         _isLoadingLrc = false;
       });
@@ -349,43 +357,20 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   void _scrollToActiveVerse() {
     if (!_scrollController.hasClients || lrcLines.isEmpty || _activeVerseIndex < 0) return;
     
-    // FEATURE 1: Viewport Bounce Logic (3rd/4th Line Rule)
-    // - Starts at top.
-    // - Moves down to bottom area.
-    // - When nearing the bottom, jumps back to bring active line to 4th position.
-    
-    final double estimatedLineHeight = _fontSize * 2.2;
-    final viewportHeight = _scrollController.position.viewportDimension;
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    
-    // Current position of the active line in pixels
-    final activeLineTop = _activeVerseIndex * estimatedLineHeight;
-    final currentScroll = _scrollController.offset;
-    
-    // Where is the active line relative to the viewport?
-    final relativePos = activeLineTop - currentScroll;
-    
-    // Thresholds
-    final upperSafeLine = 1.5 * estimatedLineHeight; // 2nd line
-    final lowerSafeZone = viewportHeight - (2 * estimatedLineHeight); // Near bottom
-    
-    double targetScroll = currentScroll;
-    
-    if (relativePos > lowerSafeZone) {
-      // We are hitting the bottom! Re-center to 4th line position
-      targetScroll = activeLineTop - upperSafeLine;
-    } else if (relativePos < 0) {
-      // Just in case we seek backwards
-      targetScroll = activeLineTop - upperSafeLine;
-    }
-    
-    // If we changed, animate
-    if ((targetScroll - currentScroll).abs() > 10) {
-      _scrollController.animateTo(
-        targetScroll.clamp(0.0, maxScroll),
-        duration: const Duration(milliseconds: 700),
-        curve: Curves.easeInOutCubic,
-      );
+    // FEATURE 1: Fixed Viewport Logic (Second/Third Line Rule)
+    // We use GlobalKeys to find the exact position of the active verse container
+    if (_activeVerseIndex < _verseKeys.length) {
+      final context = _verseKeys[_activeVerseIndex].currentContext;
+      if (context != null) {
+        // alignment: 0.15 ensures the active item is placed at 15% from the top
+        // which is roughly the second or third line of the screen.
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 700),
+          alignment: 0.15,
+          curve: Curves.easeInOutCubic,
+        );
+      }
     }
   }
 
@@ -597,70 +582,74 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
   }
 
   /// Build flowing text with verses. 
-  /// Displays full verses instead of LRC sub-timings.
+  /// Displays structured blocks for perfect multi-line highlighting.
   Widget _buildFlowingText() {
-    final List<InlineSpan> spans = [];
     final settings = ref.watch(advancedSettingsProvider);
     final highlightColor = Color(int.parse(settings.mushafVerseHighlightColorHex.replaceFirst('#', '0xFF')));
     final textColor = Color(int.parse(settings.mushafVerseTextColorHex.replaceFirst('#', '0xFF')));
     final barColor = Color(int.parse(settings.mushafBarColorHex.replaceFirst('#', '0xFF')));
 
-    // Determine the active API verse index based on current LRC position
-    int activeApiIndex = -1;
-    if (_activeVerseIndex >= 0 && _activeVerseIndex < lrcLines.length) {
-      activeApiIndex = lrcLines[_activeVerseIndex].apiVerseIndex;
-    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: List.generate(lrcLines.length, (i) {
+        final isActive = i == _activeVerseIndex;
+        
+        // FEATURE 4: Deep Highlight Logic (Solid block for multi-line support)
+        final Color bgColor = isActive
+            ? highlightColor.withOpacity(0.85) // High density deep highlight
+            : Colors.transparent;
 
-    // STRICT LRC MODE: We follow lrcLines exactly for highlighting pieces
-    // but use apiVerseIndex for numbering logic.
-    for (int i = 0; i < lrcLines.length; i++) {
-      final isActive = i == _activeVerseIndex;
-      final Color bgColor = isActive
-          ? highlightColor.withOpacity(0.7) 
-          : Colors.transparent;
-
-      spans.add(
-        TextSpan(
-          text: '${lrcLines[i].verseText} ',
-          style: _getFontStyle(isActive).copyWith(
-            backgroundColor: bgColor,
-            color: isActive 
-                ? (highlightColor.computeLuminance() > 0.5 ? Colors.black : Colors.white)
-                : textColor.withOpacity(0.85),
-          ),
-        ),
-      );
-      
-      // Verse number logic based on API alignment
-      // Only show after the last segment of an API verse
-      bool isEndOfVerse = false;
-      if (i == lrcLines.length - 1) {
-        isEndOfVerse = true;
-      } else if (lrcLines[i].apiVerseIndex != lrcLines[i + 1].apiVerseIndex) {
-        isEndOfVerse = true;
-      }
-
-      if (isEndOfVerse) {
-         spans.add(
-          TextSpan(
-            text: ' \ufd3f${lrcLines[i].apiVerseIndex + 1}\ufd3e ',
-            style: GoogleFonts.amiri(
-              fontSize: _fontSize * 0.7,
-              color: isActive ? highlightColor : barColor.withOpacity(0.5),
-              fontWeight: FontWeight.bold,
+        return AnimatedContainer(
+          key: _verseKeys[i],
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            // Suble border when active to enhance depth
+            border: Border.all(
+              color: isActive ? highlightColor.withOpacity(0.5) : Colors.transparent,
+              width: 1,
             ),
           ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RichText(
+                textAlign: TextAlign.right,
+                textDirection: TextDirection.rtl,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${lrcLines[i].verseText} ',
+                      style: _getFontStyle(isActive).copyWith(
+                        color: isActive 
+                            ? (highlightColor.computeLuminance() > 0.5 ? Colors.black : Colors.white)
+                            : textColor.withOpacity(0.9),
+                      ),
+                    ),
+                    
+                    // Verse Number Logic
+                    // Show number if it's the end of an API verse
+                    if (i == lrcLines.length - 1 || lrcLines[i].apiVerseIndex != lrcLines[i + 1].apiVerseIndex)
+                      TextSpan(
+                        text: ' \ufd3f${lrcLines[i].apiVerseIndex + 1}\ufd3e ',
+                        style: GoogleFonts.amiri(
+                          fontSize: _fontSize * 0.75,
+                          color: isActive 
+                              ? (highlightColor.computeLuminance() > 0.5 ? Colors.black45 : Colors.white60)
+                              : barColor.withOpacity(0.6),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
-      }
-    }
-
-    return RichText(
-      textAlign: TextAlign.justify,
-      textDirection: TextDirection.rtl,
-      text: TextSpan(
-        style: const TextStyle(height: 2.2),
-        children: spans,
-      ),
+      }),
     );
   }
 
