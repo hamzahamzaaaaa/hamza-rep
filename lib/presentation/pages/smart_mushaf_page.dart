@@ -13,6 +13,7 @@ import '../widgets/mushaf_settings_panel.dart';
 import '../widgets/quick_index_overlay.dart';
 import '../widgets/sync_settings_bottom_sheet.dart';
 import '../widgets/mushaf_image_engine.dart';
+import '../widgets/mushaf_pdf_engine.dart';
 
 /// ============================================================================
 /// SMART MUSHAF PAGE - تجربة المصحف الورقي الكاملة
@@ -480,7 +481,28 @@ class _SmartMushafPageState extends ConsumerState<SmartMushafPage> {
     final settings = ref.watch(advancedSettingsProvider);
     final pageColor = Color(int.parse(settings.mushafPageColorHex.replaceFirst('#', '0xFF')));
 
-    // Image-Based View Mode (New Strategy)
+    // PDF-Based View Mode (Highest Quality)
+    if (settings.mushafViewMode == MushafViewMode.pdf) {
+      return Container(
+        color: Colors.black,
+        child: SafeArea(
+          child: Column(
+            children: [
+              if (_showControls) _buildSurahHeader(),
+              Expanded(
+                child: MushafPdfEngine(
+                  surahNumber: _currentSurah.mushafIndex,
+                  position: ref.watch(playerProvider).position,
+                  lrcLines: lrcLines,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Image-Based View Mode
     if (settings.mushafViewMode == MushafViewMode.image) {
       return Container(
         color: Colors.black, // Dark container for the image

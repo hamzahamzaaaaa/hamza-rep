@@ -30,6 +30,7 @@ dependencies:
   flutter_foreground_task: ^9.2.2
   fl_chart: ^1.2.0
   open_filex: ^4.7.0
+  pdfx: ^2.9.2
 
 dev_dependencies:
   flutter_test:

@@ -1004,22 +1004,33 @@ class MushafSettingsPanel extends ConsumerWidget {
     final settings = ref.watch(advancedSettingsProvider);
 
     return GlassCard(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _buildViewModeOption(
-            'نصي',
-            'Modern Text',
-            MushafViewMode.text,
-            settings.mushafViewMode,
-            () => notifier.setMushafViewMode(MushafViewMode.text),
-          ),
-          _buildViewModeOption(
-            'ورقي (صورة)',
-            'Real Paper',
-            MushafViewMode.image,
-            settings.mushafViewMode,
-            () => notifier.setMushafViewMode(MushafViewMode.image),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildViewModeOption(
+                'نصي',
+                'Text',
+                MushafViewMode.text,
+                settings.mushafViewMode,
+                () => notifier.setMushafViewMode(MushafViewMode.text),
+              ),
+              _buildViewModeOption(
+                'صورة',
+                'Image',
+                MushafViewMode.image,
+                settings.mushafViewMode,
+                () => notifier.setMushafViewMode(MushafViewMode.image),
+              ),
+              _buildViewModeOption(
+                'ورقي (PDF)',
+                'PDF',
+                MushafViewMode.pdf,
+                settings.mushafViewMode,
+                () => notifier.setMushafViewMode(MushafViewMode.pdf),
+              ),
+            ],
           ),
         ],
       ),

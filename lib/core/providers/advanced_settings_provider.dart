@@ -7,7 +7,7 @@ enum SyncDisplayAreaSize { quarter, half, full }
 enum MushafTheme { white, sepia, dark, smartDark }
 enum ArabicFont { uthmanTaha, amiri, kufi, naskh, diwani }
 enum FontColor { black, navy, darkRed, gold }
-enum MushafViewMode { text, image }
+enum MushafViewMode { text, image, pdf }
 
 // LRC-specific settings (independent from Mushaf)
 class LrcSettings {
@@ -147,7 +147,7 @@ class AdvancedSettings {
     this.mushafBarColorHex = '#D4AF37', // Default Gold
     this.mushafVerseHighlightColorHex = '#FFD700', // Default Golden Yellow
     this.mushafVerseTextColorHex = '#000000', // Default Black
-    this.mushafViewMode = MushafViewMode.image, // Default to Image Mode
+    this.mushafViewMode = MushafViewMode.pdf, // Default to PDF Mode
     this.mushafTheme = MushafTheme.dark,
     this.mushafZoomLevel = 1.0,
     this.arabicFont = ArabicFont.amiri,
