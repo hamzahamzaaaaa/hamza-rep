@@ -140,6 +140,12 @@ class MushafSettingsPanel extends ConsumerWidget {
                     _buildMushafColorPickers(ref, notifier),
                     const SizedBox(height: 24),
 
+                    // --- NEW SECTION: View Mode Toggle ---
+                    _buildSectionTitle('طريقة العرض', 'View Mode'),
+                    const SizedBox(height: 12),
+                    _buildViewModeToggle(ref, notifier),
+                    const SizedBox(height: 24),
+
                     // Section 1: Paper Color (for SmartMushafPage)
                     if (useCustomCallbacks) ...[
                       _buildSectionTitle('لون الورق', 'Paper Color'),
@@ -990,6 +996,63 @@ class MushafSettingsPanel extends ConsumerWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildViewModeToggle(WidgetRef ref, AdvancedSettingsNotifier notifier) {
+    final settings = ref.watch(advancedSettingsProvider);
+
+    return GlassCard(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildViewModeOption(
+            'نصي',
+            'Modern Text',
+            MushafViewMode.text,
+            settings.mushafViewMode,
+            () => notifier.setMushafViewMode(MushafViewMode.text),
+          ),
+          _buildViewModeOption(
+            'ورقي (صورة)',
+            'Real Paper',
+            MushafViewMode.image,
+            settings.mushafViewMode,
+            () => notifier.setMushafViewMode(MushafViewMode.image),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewModeOption(
+    String labelAr,
+    String labelEn,
+    MushafViewMode mode,
+    MushafViewMode currentMode,
+    VoidCallback onTap,
+  ) {
+    final isSelected = mode == currentMode;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.gold.withOpacity(0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.gold : Colors.white10,
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(labelAr, style: TextStyle(color: isSelected ? AppColors.gold : Colors.white70, fontWeight: FontWeight.bold)),
+            Text(labelEn, style: TextStyle(color: Colors.white38, fontSize: 10)),
+          ],
+        ),
       ),
     );
   }

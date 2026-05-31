@@ -7,6 +7,7 @@ enum SyncDisplayAreaSize { quarter, half, full }
 enum MushafTheme { white, sepia, dark, smartDark }
 enum ArabicFont { uthmanTaha, amiri, kufi, naskh, diwani }
 enum FontColor { black, navy, darkRed, gold }
+enum MushafViewMode { text, image }
 
 // LRC-specific settings (independent from Mushaf)
 class LrcSettings {
@@ -115,6 +116,9 @@ class AdvancedSettings {
   final String mushafVerseHighlightColorHex;
   final String mushafVerseTextColorHex;
   
+  // View Mode (Text vs Real Image)
+  final MushafViewMode mushafViewMode;
+  
   // Legacy Mushaf Settings (for backward compatibility)
   final MushafTheme mushafTheme;
   final double mushafZoomLevel;
@@ -143,6 +147,7 @@ class AdvancedSettings {
     this.mushafBarColorHex = '#D4AF37', // Default Gold
     this.mushafVerseHighlightColorHex = '#FFD700', // Default Golden Yellow
     this.mushafVerseTextColorHex = '#000000', // Default Black
+    this.mushafViewMode = MushafViewMode.image, // Default to Image Mode
     this.mushafTheme = MushafTheme.dark,
     this.mushafZoomLevel = 1.0,
     this.arabicFont = ArabicFont.amiri,
@@ -171,6 +176,7 @@ class AdvancedSettings {
     String? mushafBarColorHex,
     String? mushafVerseHighlightColorHex,
     String? mushafVerseTextColorHex,
+    MushafViewMode? mushafViewMode,
     MushafTheme? mushafTheme,
     double? mushafZoomLevel,
     ArabicFont? arabicFont,
@@ -198,6 +204,7 @@ class AdvancedSettings {
       mushafBarColorHex: mushafBarColorHex ?? this.mushafBarColorHex,
       mushafVerseHighlightColorHex: mushafVerseHighlightColorHex ?? this.mushafVerseHighlightColorHex,
       mushafVerseTextColorHex: mushafVerseTextColorHex ?? this.mushafVerseTextColorHex,
+      mushafViewMode: mushafViewMode ?? this.mushafViewMode,
       mushafTheme: mushafTheme ?? this.mushafTheme,
       mushafZoomLevel: mushafZoomLevel ?? this.mushafZoomLevel,
       arabicFont: arabicFont ?? this.arabicFont,
@@ -233,6 +240,7 @@ class AdvancedSettingsNotifier extends StateNotifier<AdvancedSettings> {
       mushafBarColorHex: prefs.getString('mushaf_bar_color_hex') ?? '#D4AF37',
       mushafVerseHighlightColorHex: prefs.getString('mushaf_verse_highlight_color_hex') ?? '#FFD700',
       mushafVerseTextColorHex: prefs.getString('mushaf_verse_text_color_hex') ?? '#000000',
+      mushafViewMode: MushafViewMode.values[prefs.getInt('mushaf_view_mode') ?? 1], // Default to image (index 1)
       mushafTheme: MushafTheme.values[prefs.getInt('mushaf_theme') ?? 3],
       mushafZoomLevel: prefs.getDouble('mushaf_zoom_level') ?? 1.0,
       arabicFont: ArabicFont.values[prefs.getInt('arabic_font') ?? 1],
@@ -395,6 +403,12 @@ class AdvancedSettingsNotifier extends StateNotifier<AdvancedSettings> {
     state = state.copyWith(mushafVerseTextColorHex: hex);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('mushaf_verse_text_color_hex', hex);
+  }
+
+  Future<void> setMushafViewMode(MushafViewMode mode) async {
+    state = state.copyWith(mushafViewMode: mode);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('mushaf_view_mode', mode.index);
   }
 
   /// Get font family name from ArabicFont enum
